@@ -1,8 +1,8 @@
 bpath: bpath.o 
-	g++ -o bpath bpath.o -lgsl -lgslcblas 
+	g++ -o bpath bpath.o -O2 -lgsl -lgslcblas 
 
 bpath.o: bpath.cc 
-	g++ -c bpath.cc -lgsl -lgslcblas
+	g++ -c bpath.cc -O2 -lgsl -lgslcblas
 
 test: bpath
 	./bpath

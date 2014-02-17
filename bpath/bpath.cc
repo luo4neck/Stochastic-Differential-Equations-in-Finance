@@ -15,18 +15,11 @@ gsl_rng_set(R, time(NULL));
 
 int T=1;
 double dt = (double)T / (double)N, dW[5][N], W[5][N];
-
-for(int i=0; i<N; ++i) {
-    for(int j=0; j<5; ++j) {
-    dW[j][i] = W[j][i] = 0;
-    }
-}
 ofstream file("plot.dat");
     for(int i=0; i<N; ++i) {
         for(int j=0; j<5; ++j) {
-        double a = gsl_ran_gaussian(R, 0.5);// not sure about this 0.5
         if( i == 0 ) 
-            { W[j][0] = dW[j][0] = sqrt(dt) * gsl_ran_gaussian(R, 0.5); }
+            { W[j][0] = dW[j][0] = sqrt(dt) * gsl_ran_gaussian(R, 1.0); }
         else{
             dW[j][i] = sqrt(dt) *  gsl_ran_gaussian(R, 1.0);
             W[j][i] = W[j][i-1] + dW[j][i];
