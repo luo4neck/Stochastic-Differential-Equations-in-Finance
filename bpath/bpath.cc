@@ -1,31 +1,41 @@
 #include<iostream>
 #include<fstream>
 #include<gsl/gsl_rng.h>
+#include<gsl/gsl_randist.h>
+#include<cmath>
+#define N 1000
 
 using namespace std;
 
 int main()
 {
-const gsl_rng* R;
+gsl_rng *R = gsl_rng_alloc( gsl_rng_mt19937);
 gsl_rng_env_setup();
-R = gsl_rng_alloc( gsl_rng_mt19937);
 gsl_rng_set(R, time(NULL));
 
-int T=1, N = 500;
-double dt = (double)T / (double)N, dW[500], W[500];
+int T=1;
+double dt = (double)T / (double)N, dW[5][N], W[5][N];
 
-for(int i=0; i<500; ++i) {
-dW[i] = W[i] = 0;
+for(int i=0; i<N; ++i) {
+    for(int j=0; j<5; ++j) {
+    dW[j][i] = W[j][i] = 0;
+    }
 }
-
 ofstream file("plot.dat");
-    for(int i=0; i<100; ++i) {
-    double a = gsl_rng_uniform(R);
-    cout<<a<<", ";
-    if ( (i+1)%10 == 0) cout<<endl;
-    file<<i<<" "<<a<<endl;
+    for(int i=0; i<N; ++i) {
+        for(int j=0; j<5; ++j) {
+        double a = gsl_ran_gaussian(R, 0.5);// not sure about this 0.5
+        if( i == 0 ) 
+            { W[j][0] = dW[j][0] = sqrt(dt) * gsl_ran_gaussian(R, 0.5); }
+        else{
+            dW[j][i] = sqrt(dt) *  gsl_ran_gaussian(R, 1.0);
+            W[j][i] = W[j][i-1] + dW[j][i];
+            }
+        }
+    file<<i<<" "<<W[0][i]<<" "<<W[1][i]<<" "<<W[2][i]<<" "<<W[3][i]<<" "<<W[4][i]<<endl;
     }
 file.close();
+gsl_rng_free(R);
 
 /*=============== plotting part ===============*/
 FILE *gp = popen("gnuplot -persist", "w");;
@@ -35,7 +45,7 @@ printf("Cannot plot the data!\n");
 exit(0);
 }
 
-fprintf(gp, "plot 'plot.dat' u 1:2 w l\n");
+fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l, 'plot.dat' u 1:4 w l, 'plot.dat' u 1:5 w l, 'plot.dat' u 1:6 w l\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
 system("make clean");
