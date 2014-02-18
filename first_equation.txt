@@ -1,0 +1,31 @@
+Topic: dx/dt = -5x
+
+dx/x = -5dt
+
+integrate both sides. 
+
+ln x = -5t + k
+
+Exponentiating both sides. 
+
+x = e^(-5t + k)
+
+x = e^(-5t) * e^k
+
+x = Ke^(-5t)
+
+Have given x(0) = 1. 
+
+x(0) = 2 = Ke^(-5 * 0) = K
+
+K = 2
+
+x = 2e^(-5t)
+
+In C/C++ should be written as:
+
+x = 2 * exp(-5 * t);
+
+
+Convergence part:
+
