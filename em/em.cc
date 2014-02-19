@@ -18,6 +18,7 @@ ofstream file("plot.dat");
 W[0] = gsl_ran_gaussian(r, 1.0);
 X[0] = 1;
 file<<0<<" "<<X[0]<<endl;
+
 int j=0;
 for(int i=1; i<N; ++i)
     {

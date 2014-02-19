@@ -26,6 +26,18 @@ In C/C++ should be written as:
 
 x = 2 * exp(-5 * t);
 
+Euler Method solution:
+
+Using step size to 1, euler method begin from model Yn+1 = Yn + h*f(tn, Yn). In this case we have Xn+1 = Xn + h * f(tn, Xn). 
+
+dX/dt = -5X, is from the point (t=0, X=1), the slope= -5*X = -5. 
+
+X1 = X0 + (-5 * X0) 
+   = 1 + (-5 * 1) = -4;
+X2 = -4 + (-5 * (-4)) = 16;
+X3 = 16 + (-5 * 16) = -64;
+X4 = -64 + (-5 * (-64)) = 256;
+X5 = 256 + (-5 * 256) = -1024;
 
 Convergence part:
 

@@ -19,9 +19,9 @@ ofstream file("plot.dat");
     for(int i=0; i<N; ++i) {
         for(int j=0; j<5; ++j) {
         if( i == 0 ) 
-            { W[j][0] = dW[j][0] = sqrt(dt) * gsl_ran_gaussian(R, 1.0); }
+            { W[j][0] = dW[j][0] = sqrt(dt) * gsl_ran_gaussian(R, 0.5); }
         else{
-            dW[j][i] = sqrt(dt) *  gsl_ran_gaussian(R, 1.0);
+            dW[j][i] = sqrt(dt) *  gsl_ran_gaussian(R, 0.5);
             W[j][i] = W[j][i-1] + dW[j][i];
             }
         }
