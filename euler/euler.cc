@@ -1,28 +1,44 @@
 #include<iostream>
 #include<fstream>
 #include<gsl/gsl_rng.h>
-#include<gsl/gsl_randist.h>
 #include<cmath>
 
 using namespace std;
 
 int main()
 {
-/*gsl_rng *r = gsl_rng_alloc( gsl_rng_mt19937);
-gsl_rng_env_setup();
-gsl_rng_set(r, time(NULL));
-
-double lambda = 2, mu=1, X[256], dt = 1.0 / (double)N, W[N], Xem[64];
-*/
-double X[10];
-X[0] = 1;
+int j=1, k=1;//j is for dt=0.01 and X2, k is for dt=0.1 and X3
+double X0[1000],X1[1000], X2[100], X3[10];
+X1[0] = X0[0] = X2[0] =  X3[0] = 1;
 
 ofstream file("plot.dat");
-file<<0<<" "<<1<<endl;
-for(int i=1; i<20; ++i)
+file<<0<<" "<<1<<" "<<1<<" "<<1<<" "<<1<<endl;
+for(int i=1; i<1000; ++i)
     {
-    X[i] = X[i-1] + (-5.0 * 0.1) * X[i-1]; 
-        file<<i<<" "<<X[i]<<endl;
+    if( (i)%10 == 0)
+        {
+        if ( (i)%100 == 0)
+            {
+            X3[k] = X3[k-1] - 5.0 * 0.1  * X3[k-1];
+            X2[j] = X2[j-1] - 5.0 * 0.01  * X2[j-1];
+            X1[i] = X1[i-1] - 5.0 * 0.001 * X1[i-1]; 
+            X0[i] = exp( -5 * 0.001 * i);
+            file<<i<<" "<<X0[i]<<" "<<X1[i]<<" "<<X2[j]<<" "<<X3[k]<<endl;
+            k++, j++;
+            }
+        else{
+            X2[j] = X2[j-1] - 5.0 * 0.01  * X2[j-1];
+            X1[i] = X1[i-1] - 5.0 * 0.001 * X1[i-1]; 
+            X0[i] = exp( -5 * 0.001 * i);
+            file<<i<<" "<<X0[i]<<" "<<X1[i]<<" "<<X2[j]<<endl;
+            j++;
+            }
+        }
+    else{
+        X1[i] = X1[i-1] - 5.0 * 0.001 * X1[i-1]; 
+        X0[i] = exp( -5 * 0.001 * i);
+        file<<i<<" "<<X0[i]<<" "<<X1[i]<<endl;
+        }
     }
 file.close();
 
@@ -34,11 +50,8 @@ printf("Cannot plot the data!\n");
 exit(0);
 }
 
-fprintf(gp, "plot 'plot.dat' u 1:2 w l\n");
+fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l, 'plot.dat' u 1:4 w l, 'plot.dat' u 1:5 w l\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
-system("cat plot.dat");
-
-//system("make clean");
 return 0;
 }
