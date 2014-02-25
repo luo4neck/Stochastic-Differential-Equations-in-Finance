@@ -49,10 +49,26 @@ for(int i=0; i<M; ++i)
      //           cout<<"oh no!"<<endl;
         Xerr[p-1][i] = abs(Xtmp - Xtrue[i]) ;
         }
-    file<<i<<" "<<Xerr[0][i]<<" "<<Xerr[1][i]<<" "<<Xerr[2][i]<<" "<<Xerr[3][i]<<" "<<Xerr[4][i]<<endl;
+//    file<<i<<" "<<Xerr[0][i]<<" "<<Xerr[1][i]<<" "<<Xerr[2][i]<<" "<<Xerr[3][i]<<" "<<Xerr[4][i]<<endl;
     }
 gsl_rng_free(r);
+
+double Dtvals[5], Xmean[5]={0, 0, 0, 0, 0};
+for(int i=0; i<=4; ++i)
+    {
+    Dtvals[i] = dt * pow(2, i);
+    for(int j=0; j<1000; ++j)
+        Xmean[i] = Xerr[i][j] + Xmean[i];
+    file<<Dtvals[i]<<" "<<Xmean[i]<<endl;
+    }
 file.close();
+
+/*
+todo
+subplot(221);
+loglog
+loglog
+*/
 
 /*
 for(int i=0; i<M; ++i)
@@ -90,7 +106,9 @@ printf("Cannot plot the data!\n");
 exit(0);
 }
 
-fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l, 'plot.dat' u 1:4 w l, 'plot.dat' u 1:5 w l, 'plot.dat' u 1:6 w l\n");
+fprintf(gp, "set logscale xy\n");
+fprintf(gp, "plot 'plot.dat' u 1:2 w l\n");
+//fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l, 'plot.dat' u 1:4 w l, 'plot.dat' u 1:5 w l, 'plot.dat' u 1:6 w l\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
 //system("cat plot.dat");
