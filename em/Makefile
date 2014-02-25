@@ -1,11 +1,11 @@
-em: em.o 
-	g++ -Wall -o em em.o -O2 -lgsl -lgslcblas 
+emstrong: emstrong.o 
+	g++ -Wall -o emstrong emstrong.o -O2 -lgsl -lgslcblas 
 
-em.o: em.cc 
-	g++ -Wall -c em.cc -O2 -lgsl -lgslcblas
+emstrong.o: emstrong.cc 
+	g++ -Wall -c emstrong.cc -O2 -lgsl -lgslcblas
 
-test: em
-	./em
+test: emstrong
+	./emstrong
 
 clean:
-	rm -f *.o *.dat  
+	rm -f *.o core* 
