@@ -1,8 +1,8 @@
-milstein: milstein.cc
-	g++ -Wall milstein.cc -o milstein -lgsl -lgslcblas
+EandM: EandM.cc
+	g++ -Wall EandM.cc -o EandM -lgsl -lgslcblas
 
-test: milstein
-	./milstein
+test: EandM
+	./EandM
 
 clean:
 	rm core*
