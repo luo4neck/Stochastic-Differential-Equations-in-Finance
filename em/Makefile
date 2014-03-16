@@ -1,11 +1,8 @@
-emweak: emweak.o 
-	g++ -Wall -o emweak emweak.o -O2 -lgsl -lgslcblas 
+em: em.cc 
+	g++ -Wall em.cc -O2 -o em -lgsl -lgslcblas
 
-emweak.o: emweak.cc 
-	g++ -Wall -c emweak.cc -O2 -lgsl -lgslcblas
-
-test: emweak
-	./emweak
+test: em
+	./em
 
 clean:
 	rm -f *.o core* 
