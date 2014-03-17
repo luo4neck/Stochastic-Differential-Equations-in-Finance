@@ -1,8 +1,8 @@
-em: em.cc 
-	g++ -Wall em.cc -O2 -o em -lgsl -lgslcblas
+emweak: emweak.cc 
+	g++ -Wall emweak.cc -O2 -o emweak -lgsl -lgslcblas
 
-test: em
-	./em
+test: emweak
+	./emweak
 
 clean:
 	rm -f *.o core* 

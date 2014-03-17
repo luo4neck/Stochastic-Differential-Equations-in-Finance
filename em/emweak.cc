@@ -50,7 +50,6 @@ ofstream file("plot.dat");
 for(int i=0; i<5; ++i)
     {
     Xerr[i] = abs(Xem[i] - exp(lambda));
-    cout<<Xerr[i]<<endl;
     Dtvals[i] = pow(2, i-9);
     file<<Dtvals[i]<<" "<<Xerr[i]<<" "<<Dtvals[i]<<endl;
     }
