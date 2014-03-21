@@ -1,8 +1,8 @@
-EandM: EandM.cc
-	g++ -Wall EandM.cc -o EandM -lgsl -lgslcblas
+EandMoop: EandMoop.cc
+	g++ -Wall EandMoop.cc -o EandMoop -lgsl -lgslcblas
 
-test: EandM
-	./EandM
+test: EandMoop
+	./EandMoop
 
 clean:
 	rm core*

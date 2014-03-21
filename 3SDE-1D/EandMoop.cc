@@ -21,6 +21,44 @@
 
 using namespace std;
 
+class lines
+{
+    public:
+    int size;
+    double X[SIZE];
+    double err[M];
+    double mean;
+
+    lines(int s): size(s)
+    {
+        mean = 0;
+        for(int i=0; i<s; ++i)
+        { X[i] = 0; }
+        X[0] = 1;
+        
+        for(int i=0; i<M; ++i)
+        { err[i] = 0; }
+    }
+
+    ~lines() {}
+
+    double sigma()
+    {
+        double sigma=0;
+        for(int i=0; i<M; ++i)
+            sigma = sigma + (mean - err[i])*(mean - err[i]);
+        
+        return sigma/(double)(M-1); 
+    }
+
+    double up(double p)
+    { return mean + gsl_cdf_tdist_Pinv(p, M-1)*sqrt( sigma()/(double)M); }
+    
+    double down(double p)
+    { return mean + gsl_cdf_tdist_Qinv(p, M-1)*sqrt( sigma()/(double)M); }
+};
+
+
 void Prepare(gsl_rng *r, double dt, double a, double b, double dW[SIZE], double W[SIZE], double Xtrue[SIZE])
 {// this function gives dW and W values and return the true solution of the SDE
     double sum=Xtrue[0];
@@ -40,22 +78,22 @@ gsl_rng *r = gsl_rng_alloc( gsl_rng_mt19937 );
 gsl_rng_env_setup();
 gsl_rng_set(r, time(NULL));
 ofstream error("error.dat"); 
+lines mil3(SIZE), elr3(SIZE);
 
 double X0[SIZE], X1[SIZE], a=2, b=2, dt = 1.0/(double) SIZE, Xtrue[SIZE], W[SIZE], dW[SIZE];
-double err0[M], err1[M], mean0=0, mean1=0;
 
 for(int j=0; j<M; ++j)
 {
 Xtrue[0] = X0[0] = X1[0] = 1; 
-err0[j] = err1[j] = 0;
+mil3.err[j] = elr3.err[j] = 0;
 Prepare(r, dt, a, b, dW, W, Xtrue);    
     for(int i=1; i<SIZE; ++i)
     {
         X0[i]= X0[i-1] + a*X0[i-1]*dt + b*X0[i-1]*dW[i-1] + 0.5*b*X0[i-1]*b*( dW[i-1]*dW[i-1] - dt);// milstein method..
-        err0[j] = err0[j] + abs(Xtrue[i] - X0[i]);// error at this step..
+        mil3.err[j] = mil3.err[j] + abs(Xtrue[i] - X0[i]);// error at this step..
         
         X1[i]= X1[i-1] + a*X1[i-1]*dt + b*X1[i-1]*dW[i-1]; // euler-maruyama method.. 
-        err1[j] = err1[j] + abs(Xtrue[i] - X1[i]); // error at this step..
+        elr3.err[j] = elr3.err[j] + abs(Xtrue[i] - X1[i]); // error at this step..
      /*   if((i+1)%10 == 0)
         {
             if((i+1)%100 == 0)
@@ -67,34 +105,24 @@ Prepare(r, dt, a, b, dW, W, Xtrue);
         }
         else*/
     }
-err0[j] = err0[j]/(double)SIZE;
-err1[j] = err1[j]/(double)SIZE;
-mean0 = mean0 + err0[j]; //accumulate the mean..
-mean1 = mean1 + err1[j];
-error<<j<<" "<<err0[j]<<" "<<err1[j]<<endl;// print the error of two methods via gnuplot..
+mil3.err[j] = mil3.err[j]/(double)SIZE;
+elr3.err[j] = elr3.err[j]/(double)SIZE;
+mil3.mean = mil3.mean + mil3.err[j]; //accumulate the mean..
+elr3.mean = elr3.mean + elr3.err[j];
+error<<j<<" "<<mil3.err[j]<<" "<<elr3.err[j]<<endl;// print the error of two methods via gnuplot..
 //cout<<sumXtrue<<endl<<sumX0<<endl<<sumX1<<endl;
 }
 gsl_rng_free(r);
 error.close();
-mean0 = mean0/(double)M;//get the meam..
-mean1 = mean1/(double)M;
-//cout<<mean0<<endl<<mean1<<endl;
+mil3.mean = mil3.mean/(double)M;//get the meam..
+elr3.mean = elr3.mean/(double)M;
 
-double sigma0=0, sigma1=0;
-for(int i=0; i<M; ++i)
-{
-    sigma0 = sigma0 + (mean0 - err0[i])*(mean0 - err0[i]);
-    sigma1 = sigma1 + (mean1 - err1[i])*(mean1 - err1[i]);
-}    
-sigma0 = sigma0/(double)(M-1); // get the sigma's square..
-sigma1 = sigma1/(double)(M-1);
-//cout<<sigma0<<endl<<sigma1<<endl;
 
 cout<<"The 90% confidence interval of milstein is:"<<endl;
-cout<<mean0 + gsl_cdf_tdist_Pinv(0.95, M-1)*sqrt(sigma0/(double)M)<<" : "<<mean0 + gsl_cdf_tdist_Qinv(0.95, M-1)*sqrt(sigma0/(double)M)<<endl;
+cout<<mil3.up(0.95)<<" : "<<mil3.down(0.95)<<endl;
 
 cout<<"The 90% confidence interval of euler is:"<<endl;
-cout<<mean1 + gsl_cdf_tdist_Pinv(0.95, M-1)*sqrt(sigma1/(double)M)<<" : "<<mean1 + gsl_cdf_tdist_Qinv(0.95, M-1)*sqrt(sigma1/(double)M)<<endl;
+cout<<elr3.up(0.95)<<" : "<<elr3.down(0.95)<<endl;
 /* ========== data store part ended, plotting part start ========== */
 
 FILE *gp = popen("gnuplot -persist", "w");
