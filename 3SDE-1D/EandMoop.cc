@@ -27,11 +27,13 @@ class Lines
     double *X;
     double err[M];
     double mean;
+    double wmean;
 
     Lines(int s): size(s)
     {
         X = new double[s];
         mean = 0;
+        wmean = 0;
         for(int i=0; i<s; ++i)
         { X[i] = 0; }
         X[0] = 1;
@@ -89,41 +91,46 @@ int I;
 
 for(int j=0; j<M; ++j)
 {
-Xtrue[0] =1;
+elr3.wmean = elr2.wmean = elr1.wmean = elr0.wmean = Xtrue[0] =1;
+
 Prepare(r, dt, a, b, dW, W, Xtrue);    
     for(int i=1; i<SIZE; ++i)
-    {
+    { // step size 1/512..
         mil3.X[i]= mil3.X[i-1] + a*mil3.X[i-1]*dt + b*mil3.X[i-1]*dW[i-1] + 0.5*b*mil3.X[i-1]*b*( dW[i-1]*dW[i-1] - dt);
         mil3.err[j] = mil3.err[j] + abs(Xtrue[i] - mil3.X[i]);
         elr3.X[i]= elr3.X[i-1] + a*elr3.X[i-1]*dt + b*elr3.X[i-1]*dW[i-1];
         elr3.err[j] = elr3.err[j] + abs(Xtrue[i] - elr3.X[i]); 
+        elr3.wmean = elr3.wmean + elr3.X[i];
         
         if(i%2==0)
-        {
+        {// step size 1/256..
         I = i/2;
         sum = dW[i-1] + dW[i-2];
         mil2.X[I]= mil2.X[I-1] + a*mil2.X[I-1]*2*dt + b*mil2.X[I-1]*sum + 0.5*b*mil2.X[I-1]*b*( sum*sum -2*dt);
         mil2.err[j] = mil2.err[j] + abs(Xtrue[I*2] - mil2.X[I]);
         elr2.X[I]= elr2.X[I-1] + a*elr2.X[I-1]*2*dt + b*elr2.X[I-1]*sum; 
         elr2.err[j] = elr2.err[j] + abs(Xtrue[I*2] - elr2.X[I]);
+        elr2.wmean = elr2.wmean + elr2.X[I];
         
             if(i%4==0)
-            {
+            {// step size 1/128..
             I = i/4;
             sum = dW[i-1] + dW[i-2] + dW[i-3] + dW[i-4];
             mil1.X[I]= mil1.X[I-1] + a*mil1.X[I-1]*4*dt + b*mil1.X[I-1]*sum + 0.5*b*mil1.X[I-1]*b*( sum*sum -4*dt);
             mil1.err[j] = mil1.err[j] + abs(Xtrue[I*4] - mil1.X[I]);
             elr1.X[I]= elr1.X[I-1] + a*elr1.X[I-1]*4*dt + b*elr1.X[I-1]*sum;
             elr1.err[j] = elr1.err[j] + abs(Xtrue[I*4] - elr1.X[I]);
+            elr1.wmean = elr1.wmean + elr1.X[I];
             
                 if(i%8==0)
-                {
+                {// step size 1/64..
                 I = i/8;
                 sum = dW[i-1] + dW[i-2] + dW[i-3] + dW[i-4] + dW[i-5] + dW[i-6] + dW[i-7] + dW[i-8];
                 mil0.X[I]= mil0.X[I-1] + a*mil0.X[I-1]*8*dt + b*mil0.X[I-1]*sum + 0.5*b*mil0.X[I-1]*b*( sum*sum -8*dt);
                 mil0.err[j] = mil0.err[j] + abs(Xtrue[I*8] - mil0.X[I]);
                 elr0.X[I]= elr0.X[I-1] + a*elr0.X[I-1]*8*dt + b*elr0.X[I-1]*sum;
                 elr0.err[j] = elr0.err[j] + abs(Xtrue[I*8] - elr0.X[I]);
+                elr0.wmean = elr0.wmean + elr0.X[I];
                 }
             }
         }
@@ -155,12 +162,22 @@ mil3.mean = mil3.mean/(double)M;//get the meam..
 mil2.mean = mil2.mean/(double)M;
 mil1.mean = mil1.mean/(double)M;
 mil0.mean = mil0.mean/(double)M;
+
+elr3.wmean = abs(elr3.wmean/(double)elr3.size/(double)M - exp(a));// weak convergence..
+elr2.wmean = abs(elr2.wmean/(double)elr2.size/(double)M - exp(a));
+elr1.wmean = abs(elr1.wmean/(double)elr1.size/(double)M - exp(a));
+elr0.wmean = abs(elr0.wmean/(double)elr0.size/(double)M - exp(a));
+cout<<elr3.wmean<<endl;
+cout<<elr2.wmean<<endl;
+cout<<elr1.wmean<<endl;
+cout<<elr0.wmean<<endl;
+
 elr3.mean = elr3.mean/(double)M;
 elr2.mean = elr2.mean/(double)M;
 elr1.mean = elr1.mean/(double)M;
 elr0.mean = elr0.mean/(double)M;
 
-ofstream data("data.dat"); 
+ofstream data("data.dat");// send all data into 'data.dat' for error convergence..
 data<<dt<<" "<<dt  <<" "<<mil3.mean<<" "<<mil3.up(0.975)<<" "<<mil3.down(0.975)<<" "<<mil3.up(0.95)<<" "<<mil3.down(0.95)<<" "<<elr3.mean<<" "<<elr3.up(0.975)<<" "<<elr3.down(0.975)<<" "<<elr3.up(0.95)<<" "<<elr3.down(0.95)<<endl;
 
 data<<dt*2<<" "<<dt*2<<" "<<mil2.mean<<" "<<mil2.up(0.975)<<" "<<mil2.down(0.975)<<" "<<mil2.up(0.95)<<" "<<mil2.down(0.95)<<" "<<elr2.mean<<" "<<elr2.up(0.975)<<" "<<elr2.down(0.975)<<" "<<elr2.up(0.95)<<" "<<elr2.down(0.95)<<endl;
@@ -170,7 +187,7 @@ data<<dt*4<<" "<<dt*4<<" "<<mil1.mean<<" "<<mil1.up(0.975)<<" "<<mil1.down(0.975
 data<<dt*8<<" "<<dt*8<<" "<<mil0.mean<<" "<<mil0.up(0.975)<<" "<<mil0.down(0.975)<<" "<<mil0.up(0.95)<<" "<<mil0.down(0.95)<<" "<<elr0.mean<<" "<<elr0.up(0.975)<<" "<<elr0.down(0.975)<<" "<<elr0.up(0.95)<<" "<<elr0.down(0.95)<<endl;
 data.close();
 
-/* ========== data store part ended, plotting part start ========== */
+/* ========== data store part ended, error plot part start ========== */
 
 FILE *gp = popen("gnuplot -persist", "w");
 if(gp == NULL)
@@ -178,11 +195,12 @@ if(gp == NULL)
 cout<<"Cannot plot the data!"<<endl;
 exit(0);
 }
-
 fprintf(gp, "set title '8 Lines show the error of 4 step sizes and 2 method'\n");
 fprintf(gp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l, 'error.dat' u 1:5 w l, 'error.dat' u 1:6 w l, 'error.dat' u 1:7 w l, 'error.dat' u 1:8 w l, 'error.dat' u 1:9 w l\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
+
+/* ========== error plot ended, convergence plot start ========== */
 
 FILE *fp = popen("gnuplot -persist", "w");
 if(fp == NULL)
@@ -190,24 +208,22 @@ if(fp == NULL)
 cout<<"Cannot plot the data!"<<endl;
 exit(0);
 }
-
-
 fprintf(fp, "set logscale xy\n");
 fprintf(fp, "set xrange [0.001:0.05]\n");
-/*
+
 fprintf(fp, "f1(x)=a1*exp(x)+b1\n"); // fitting with exponential pattern..
-fprintf(fp, "a1=7,b1=-7\n");
+fprintf(fp, "a1=7;b1=-7\n");
 fprintf(fp, "f2(x)=a2*exp(x)+b2\n");
-fprintf(fp, "a2=25,b2=-25\n");
-*/
+fprintf(fp, "a2=25;b2=-25\n");
+/*
 fprintf(fp, "f1(x)=a1*x+b1\n");// fitting with linear pattern..
 fprintf(fp, "a1=7,b1=5\n");
 fprintf(fp, "f2(x)=a2*x+b2\n");
 fprintf(fp, "a2=5,b2=5\n");
-
+*/
 fprintf(fp, "fit [0.001:0.05] f1(x) 'data.dat' u 1:3 via a1,b1\n");
 fprintf(fp, "fit [0.001:0.05] f2(x) 'data.dat' u 1:8 via a2,b2\n");
-fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3:4:5 w yerrorlines, 'data.dat' u 1:3:6:7 w yerrorlines, 'data.dat' u 1:8:9:10 w yerrorlines, 'data.dat' u 1:8:11:12 w yerrorlines, f1(x) lw 2 lc rgb 'orange', f2(x) lw 2 lc rgb 'yellow'\n");//, g(x) lw 2 lc rgb 'yellow'\n");
+fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3:4:5 w yerrorlines, 'data.dat' u 1:3:6:7 w yerrorlines, 'data.dat' u 1:8:9:10 w yerrorlines, 'data.dat' u 1:8:11:12 w yerrorlines, f1(x) lw 1 lc rgb 'orange', f2(x) lw 1 lc rgb 'yellow'\n");
 
 fprintf(fp, "pause -1\n");
 fclose(fp); 
