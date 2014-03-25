@@ -5,4 +5,4 @@ test: EandMoop
 	./EandMoop
 
 clean:
-	rm core*
+	rm fit.log 

@@ -52,13 +52,13 @@ class Lines
 
     double up(double p)
     {
-    sigma = getsigma(); 
-    return mean + gsl_cdf_tdist_Pinv(p, M-1)*sqrt( sigma/(double)M); 
+        sigma = getsigma(); 
+        return mean + gsl_cdf_tdist_Pinv(p, M-1)*sqrt( sigma/(double)M); 
     }
     double down(double p)
     {
-    sigma = getsigma(); 
-    return mean + gsl_cdf_tdist_Qinv(p, M-1)*sqrt( sigma/(double)M); 
+        sigma = getsigma(); 
+        return mean + gsl_cdf_tdist_Qinv(p, M-1)*sqrt( sigma/(double)M); 
     }
 };
 
@@ -125,7 +125,6 @@ Prepare(r, dt, a, b, dW, W, Xtrue);
                 elr0.X[I]= elr0.X[I-1] + a*elr0.X[I-1]*8*dt + b*elr0.X[I-1]*sum;
                 elr0.err[j] = elr0.err[j] + abs(Xtrue[I*8] - elr0.X[I]);
                 }
-            //data<<I<<" "<<Xtrue[I*4]<<" "<<mil3.X[I*4]<<" "<<elr3.X[I*4]<<" "<<mil2.X[I*2]<<" "<<elr2.X[I*2]<<" "<<mil1.X[I]<<" "<<elr1.X[I]<<endl;// print the Xor of two methods via gnuplot..
             }
         }
     }
@@ -162,17 +161,15 @@ elr1.mean = elr1.mean/(double)M;
 elr0.mean = elr0.mean/(double)M;
 
 ofstream data("data.dat"); 
-data<<1<<" "<<dt<<" "<<mil3.mean<<" "<<elr3.mean<<endl;
-data<<2<<" "<<dt*2<<" "<<mil2.mean<<" "<<elr2.mean<<endl;
-data<<3<<" "<<dt*4<<" "<<mil1.mean<<" "<<elr1.mean<<endl;
-data<<4<<" "<<dt*8<<" "<<mil0.mean<<" "<<elr0.mean<<endl;
+data<<dt<<" "<<dt  <<" "<<mil3.mean<<" "<<mil3.up(0.975)<<" "<<mil3.down(0.975)<<" "<<mil3.up(0.95)<<" "<<mil3.down(0.95)<<" "<<elr3.mean<<" "<<elr3.up(0.975)<<" "<<elr3.down(0.975)<<" "<<elr3.up(0.95)<<" "<<elr3.down(0.95)<<endl;
+
+data<<dt*2<<" "<<dt*2<<" "<<mil2.mean<<" "<<mil2.up(0.975)<<" "<<mil2.down(0.975)<<" "<<mil2.up(0.95)<<" "<<mil2.down(0.95)<<" "<<elr2.mean<<" "<<elr2.up(0.975)<<" "<<elr2.down(0.975)<<" "<<elr2.up(0.95)<<" "<<elr2.down(0.95)<<endl;
+
+data<<dt*4<<" "<<dt*4<<" "<<mil1.mean<<" "<<mil1.up(0.975)<<" "<<mil1.down(0.975)<<" "<<mil1.up(0.95)<<" "<<mil1.down(0.95)<<" "<<elr1.mean<<" "<<elr1.up(0.975)<<" "<<elr1.down(0.975)<<" "<<elr1.up(0.95)<<" "<<elr1.down(0.95)<<endl;
+
+data<<dt*8<<" "<<dt*8<<" "<<mil0.mean<<" "<<mil0.up(0.975)<<" "<<mil0.down(0.975)<<" "<<mil0.up(0.95)<<" "<<mil0.down(0.95)<<" "<<elr0.mean<<" "<<elr0.up(0.975)<<" "<<elr0.down(0.975)<<" "<<elr0.up(0.95)<<" "<<elr0.down(0.95)<<endl;
 data.close();
 
-cout<<"The 90% confidence interval of milstein is:"<<endl;
-cout<<mil3.up(0.95)<<" : "<<mil3.down(0.95)<<endl;
-
-cout<<"The 90% confidence interval of euler is:"<<endl;
-cout<<elr3.up(0.95)<<" : "<<elr3.down(0.95)<<endl;
 /* ========== data store part ended, plotting part start ========== */
 
 FILE *gp = popen("gnuplot -persist", "w");
@@ -184,9 +181,6 @@ exit(0);
 
 fprintf(gp, "set title '8 Lines show the error of 4 step sizes and 2 method'\n");
 fprintf(gp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l, 'error.dat' u 1:5 w l, 'error.dat' u 1:6 w l, 'error.dat' u 1:7 w l, 'error.dat' u 1:8 w l, 'error.dat' u 1:9 w l\n");
-//fprintf(gp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l, 'error.dat' u 1:5 w l\n");
-//fprintf(gp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l\n");
-//fprintf(gp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
 
@@ -197,10 +191,24 @@ cout<<"Cannot plot the data!"<<endl;
 exit(0);
 }
 
+
 fprintf(fp, "set logscale xy\n");
-fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3 w l, 'data.dat' u 1:4 w l\n");
-//fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3 w l\n");
-//fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3 w l, 'data.dat' u 1:4 w l, 'data.dat' u 1:5 w l, 'data.dat' u 1:6 w l, 'data.dat' u 1:7 w l, 'data.dat' u 1:8 w l\n");
+fprintf(fp, "set xrange [0.001:0.05]\n");
+/*
+fprintf(fp, "f1(x)=a1*exp(x)+b1\n"); // fitting with exponential pattern..
+fprintf(fp, "a1=7,b1=-7\n");
+fprintf(fp, "f2(x)=a2*exp(x)+b2\n");
+fprintf(fp, "a2=25,b2=-25\n");
+*/
+fprintf(fp, "f1(x)=a1*x+b1\n");// fitting with linear pattern..
+fprintf(fp, "a1=7,b1=5\n");
+fprintf(fp, "f2(x)=a2*x+b2\n");
+fprintf(fp, "a2=5,b2=5\n");
+
+fprintf(fp, "fit [0.001:0.05] f1(x) 'data.dat' u 1:3 via a1,b1\n");
+fprintf(fp, "fit [0.001:0.05] f2(x) 'data.dat' u 1:8 via a2,b2\n");
+fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3:4:5 w yerrorlines, 'data.dat' u 1:3:6:7 w yerrorlines, 'data.dat' u 1:8:9:10 w yerrorlines, 'data.dat' u 1:8:11:12 w yerrorlines, f1(x) lw 2 lc rgb 'orange', f2(x) lw 2 lc rgb 'yellow'\n");//, g(x) lw 2 lc rgb 'yellow'\n");
+
 fprintf(fp, "pause -1\n");
 fclose(fp); 
 //one side 90 95 97.5
