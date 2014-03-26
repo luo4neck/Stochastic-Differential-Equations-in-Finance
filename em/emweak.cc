@@ -51,6 +51,7 @@ for(int i=0; i<5; ++i)
     {
     Xerr[i] = abs(Xem[i] - exp(lambda));
     Dtvals[i] = pow(2, i-9);
+    cout<<Dtvals[i]<<" "<<Xerr[i]<<" "<<Xem[i]<<endl;
     file<<Dtvals[i]<<" "<<Xerr[i]<<" "<<Dtvals[i]<<endl;
     }
 file.close();

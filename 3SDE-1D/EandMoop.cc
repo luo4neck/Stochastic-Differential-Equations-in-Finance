@@ -27,13 +27,13 @@ class Lines
     double *X;
     double err[M];
     double mean;
-    double wmean;
+    double weak_mean;
 
     Lines(int s): size(s)
     {
         X = new double[s];
         mean = 0;
-        wmean = 0;
+        weak_mean = 0;
         for(int i=0; i<s; ++i)
         { X[i] = 0; }
         X[0] = 1;
@@ -42,7 +42,10 @@ class Lines
         { err[i] = 0; }
     }
 
-    ~Lines() {delete[] X;}
+    ~Lines() 
+    {
+        delete[] X;
+    }
 
     double getsigma()
     {
@@ -89,9 +92,10 @@ Lines mil3(SIZE), elr3(SIZE), mil2(SIZE/2), elr2(SIZE/2), mil1(SIZE/4), elr1(SIZ
 double a=2, b=2, sum=0, dt = 1.0/(double) SIZE, Xtrue[SIZE], W[SIZE], dW[SIZE];
 int I;
 
+elr3.weak_mean = elr2.weak_mean = elr1.weak_mean = elr0.weak_mean = Xtrue[0] =1;
 for(int j=0; j<M; ++j)
 {
-elr3.wmean = elr2.wmean = elr1.wmean = elr0.wmean = Xtrue[0] =1;
+//elr3.weak = elr2.weak = elr1.weak = elr0.weak = Xtrue[0] =1;
 
 Prepare(r, dt, a, b, dW, W, Xtrue);    
     for(int i=1; i<SIZE; ++i)
@@ -100,7 +104,7 @@ Prepare(r, dt, a, b, dW, W, Xtrue);
         mil3.err[j] = mil3.err[j] + abs(Xtrue[i] - mil3.X[i]);
         elr3.X[i]= elr3.X[i-1] + a*elr3.X[i-1]*dt + b*elr3.X[i-1]*dW[i-1];
         elr3.err[j] = elr3.err[j] + abs(Xtrue[i] - elr3.X[i]); 
-        elr3.wmean = elr3.wmean + elr3.X[i];
+     //   elr3.weak_mean = elr3.weak_mean + elr3.X[i];
         
         if(i%2==0)
         {// step size 1/256..
@@ -110,7 +114,7 @@ Prepare(r, dt, a, b, dW, W, Xtrue);
         mil2.err[j] = mil2.err[j] + abs(Xtrue[I*2] - mil2.X[I]);
         elr2.X[I]= elr2.X[I-1] + a*elr2.X[I-1]*2*dt + b*elr2.X[I-1]*sum; 
         elr2.err[j] = elr2.err[j] + abs(Xtrue[I*2] - elr2.X[I]);
-        elr2.wmean = elr2.wmean + elr2.X[I];
+    //    elr2.weak_mean = elr2.weak_mean + elr2.X[I];
         
             if(i%4==0)
             {// step size 1/128..
@@ -120,7 +124,7 @@ Prepare(r, dt, a, b, dW, W, Xtrue);
             mil1.err[j] = mil1.err[j] + abs(Xtrue[I*4] - mil1.X[I]);
             elr1.X[I]= elr1.X[I-1] + a*elr1.X[I-1]*4*dt + b*elr1.X[I-1]*sum;
             elr1.err[j] = elr1.err[j] + abs(Xtrue[I*4] - elr1.X[I]);
-            elr1.wmean = elr1.wmean + elr1.X[I];
+         //   elr1.weak_mean = elr1.weak_mean + elr1.X[I];
             
                 if(i%8==0)
                 {// step size 1/64..
@@ -130,7 +134,7 @@ Prepare(r, dt, a, b, dW, W, Xtrue);
                 mil0.err[j] = mil0.err[j] + abs(Xtrue[I*8] - mil0.X[I]);
                 elr0.X[I]= elr0.X[I-1] + a*elr0.X[I-1]*8*dt + b*elr0.X[I-1]*sum;
                 elr0.err[j] = elr0.err[j] + abs(Xtrue[I*8] - elr0.X[I]);
-                elr0.wmean = elr0.wmean + elr0.X[I];
+        //        elr0.weak_mean = elr0.weak_mean + elr0.X[I];
                 }
             }
         }
@@ -162,20 +166,30 @@ mil3.mean = mil3.mean/(double)M;//get the meam..
 mil2.mean = mil2.mean/(double)M;
 mil1.mean = mil1.mean/(double)M;
 mil0.mean = mil0.mean/(double)M;
-
-elr3.wmean = abs(elr3.wmean/(double)elr3.size/(double)M - exp(a));// weak convergence..
-elr2.wmean = abs(elr2.wmean/(double)elr2.size/(double)M - exp(a));
-elr1.wmean = abs(elr1.wmean/(double)elr1.size/(double)M - exp(a));
-elr0.wmean = abs(elr0.wmean/(double)elr0.size/(double)M - exp(a));
-cout<<elr3.wmean<<endl;
-cout<<elr2.wmean<<endl;
-cout<<elr1.wmean<<endl;
-cout<<elr0.wmean<<endl;
-
 elr3.mean = elr3.mean/(double)M;
 elr2.mean = elr2.mean/(double)M;
 elr1.mean = elr1.mean/(double)M;
 elr0.mean = elr0.mean/(double)M;
+
+/*
+// weak convergence computing..
+cout<<elr3.weak_mean<<" "<<exp(a)<<" "<<elr3.weak_mean/(double)elr3.size/(double)M<<endl;// weak convergence..
+cout<<elr2.weak_mean<<" "<<exp(a)<<" "<<elr2.weak_mean/(double)elr2.size/(double)M<<endl;// weak convergence..
+cout<<elr1.weak_mean<<" "<<exp(a)<<" "<<elr1.weak_mean/(double)elr1.size/(double)M<<endl;// weak convergence..
+cout<<elr0.weak_mean<<" "<<exp(a)<<" "<<elr0.weak_mean/(double)elr0.size/(double)M<<endl;// weak convergence..
+cout<<elr3.weak_mean<<" "<<exp(a)<<" "<<elr3.weak_mean/(double)M<<endl;// weak convergence..
+cout<<elr2.weak_mean<<" "<<exp(a)<<" "<<elr2.weak_mean/(double)M<<endl;// weak convergence..
+cout<<elr1.weak_mean<<" "<<exp(a)<<" "<<elr1.weak_mean/(double)M<<endl;// weak convergence..
+cout<<elr0.weak_mean<<" "<<exp(a)<<" "<<elr0.weak_mean/(double)M<<endl;// weak convergence..
+elr3.weak_mean = abs(elr3.weak_mean/(double)elr3.size/(double)M - exp(a));// weak convergence..
+elr2.weak_mean = abs(elr2.weak_mean/(double)elr2.size/(double)M - exp(a));
+elr1.weak_mean = abs(elr1.weak_mean/(double)elr1.size/(double)M - exp(a));
+elr0.weak_mean = abs(elr0.weak_mean/(double)elr0.size/(double)M - exp(a));
+cout<<elr3.weak_mean<<endl;
+cout<<elr2.weak_mean<<endl;
+cout<<elr1.weak_mean<<endl;
+cout<<elr0.weak_mean<<endl;
+*/
 
 ofstream data("data.dat");// send all data into 'data.dat' for error convergence..
 data<<dt<<" "<<dt  <<" "<<mil3.mean<<" "<<mil3.up(0.975)<<" "<<mil3.down(0.975)<<" "<<mil3.up(0.95)<<" "<<mil3.down(0.95)<<" "<<elr3.mean<<" "<<elr3.up(0.975)<<" "<<elr3.down(0.975)<<" "<<elr3.up(0.95)<<" "<<elr3.down(0.95)<<endl;
@@ -189,45 +203,61 @@ data.close();
 
 /* ========== data store part ended, error plot part start ========== */
 
-FILE *gp = popen("gnuplot -persist", "w");
-if(gp == NULL)
-{
-cout<<"Cannot plot the data!"<<endl;
-exit(0);
-}
-fprintf(gp, "set title '8 Lines show the error of 4 step sizes and 2 method'\n");
-fprintf(gp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l, 'error.dat' u 1:5 w l, 'error.dat' u 1:6 w l, 'error.dat' u 1:7 w l, 'error.dat' u 1:8 w l, 'error.dat' u 1:9 w l\n");
-fprintf(gp, "pause -1\n");
-fclose(gp);
-
-/* ========== error plot ended, convergence plot start ========== */
-
 FILE *fp = popen("gnuplot -persist", "w");
 if(fp == NULL)
 {
-cout<<"Cannot plot the data!"<<endl;
-exit(0);
+    cout<<"Cannot plot the data!"<<endl;
+    exit(0);
 }
-fprintf(fp, "set logscale xy\n");
-fprintf(fp, "set xrange [0.001:0.05]\n");
+fprintf(fp, "set title '8 Lines show the error of 4 step sizes and 2 method'\n");
+fprintf(fp, "set xlabel 'Number of batches'\n");
+fprintf(fp, "set ylabel 'Errors at different batches'\n");
+fprintf(fp, "unset key\n");
+fprintf(fp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l, 'error.dat' u 1:5 w l, 'error.dat' u 1:6 w l, 'error.dat' u 1:7 w l, 'error.dat' u 1:8 w l, 'error.dat' u 1:9 w l\n");
+fprintf(fp, "pause -1\n");
+fclose(fp);
 
-fprintf(fp, "f1(x)=a1*exp(x)+b1\n"); // fitting with exponential pattern..
-fprintf(fp, "a1=7;b1=-7\n");
-fprintf(fp, "f2(x)=a2*exp(x)+b2\n");
-fprintf(fp, "a2=25;b2=-25\n");
-/*
-fprintf(fp, "f1(x)=a1*x+b1\n");// fitting with linear pattern..
-fprintf(fp, "a1=7,b1=5\n");
-fprintf(fp, "f2(x)=a2*x+b2\n");
-fprintf(fp, "a2=5,b2=5\n");
-*/
+/* ========== error plot ended, error bar plot start ========== */
+
+fp = popen("gnuplot -persist", "w");
+if(fp == NULL)
+{
+    cout<<"Cannot plot the data!"<<endl;
+    exit(0);
+}
+fprintf(fp, "set title 'Errorbars at different step sizes for Milstein method and Euler-Maruyama method'\n");
+fprintf(fp, "set logscale xy\n");
+fprintf(fp, "unset key\n");
+fprintf(fp, "set xlabel 'Step sizes: of 1/512 1/256 1/128 1/64'\n");
+fprintf(fp, "set ylabel 'Errorbars at different step sizes'\n");
+fprintf(fp, "set xrange [0.001:0.05]\n");
+fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3:4:5 w yerrorlines, 'data.dat' u 1:3:6:7 w yerrorlines, 'data.dat' u 1:8:9:10 w yerrorlines, 'data.dat' u 1:8:11:12 w yerrorlines\n");
+fprintf(fp, "pause -1\n");
+fclose(fp); 
+
+/* ========== error plot ended, fitting line plot start ========== */
+
+fp = popen("gnuplot -persist", "w");
+if(fp == NULL)
+{
+    cout<<"Cannot plot the data!"<<endl;
+    exit(0);
+}
+fprintf(fp, "set title 'Fitting Line and Error at different step sizes for Milstein method and Euler-Maruyama method'\n");
+fprintf(fp, "set logscale xy\n");
+fprintf(fp, "unset key\n");
+fprintf(fp, "set xlabel 'Step sizes: of 1/512 1/256 1/128 1/64'\n");
+fprintf(fp, "set ylabel 'Errors at different step sizes'\n");
+fprintf(fp, "set xrange [0.001:0.05]\n");
+fprintf(fp, "f1(x)=a1*x**b1\n");//milstein line..
+fprintf(fp, "a1=3;b1=-1\n");
+fprintf(fp, "f2(x)=a2*x**b2\n");//euler line..
+fprintf(fp, "a2=5;b2=-1\n");
 fprintf(fp, "fit [0.001:0.05] f1(x) 'data.dat' u 1:3 via a1,b1\n");
 fprintf(fp, "fit [0.001:0.05] f2(x) 'data.dat' u 1:8 via a2,b2\n");
-fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3:4:5 w yerrorlines, 'data.dat' u 1:3:6:7 w yerrorlines, 'data.dat' u 1:8:9:10 w yerrorlines, 'data.dat' u 1:8:11:12 w yerrorlines, f1(x) lw 1 lc rgb 'orange', f2(x) lw 1 lc rgb 'yellow'\n");
+fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3 w l, 'data.dat' u 1:8 w l, f1(x) lw 1 lc rgb 'orange', f2(x) lw 1 lc rgb 'yellow'\n");
 
 fprintf(fp, "pause -1\n");
 fclose(fp); 
-//one side 90 95 97.5
-//two side 80 90 95
 return 0;
 }
