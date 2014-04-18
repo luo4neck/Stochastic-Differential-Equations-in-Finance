@@ -71,15 +71,16 @@ for(int j=0; j<MC; ++j) // monte carlo part..
     
     
     V[0] = 0.04, X[0] = 100;
-    for(int i=1; i<N; ++i)// approach for euler SDE solution..
+    for(int i=1; i<N; ++i) // milstein approach for SDE..
     {
-        X[i] = X[i-1] + rate * X[i-1] * dt + sqrt(abs(V[i-1])) * X[i-1] * dW1[i-1];
+        X[i] = X[i-1] + rate * X[i-1] * dt + sqrt(abs(V[i-1])) * X[i-1] * dW1[i-1] + 0.5 * X[i-1] * V[i-1] * (dW2[i-1]*dW2[i-1] - dt);
         
-        V[i] = V[i-1] + kappa * dt * (theta - V[i-1]) + eps * sqrt(abs(V[i-1])) * dW2[i-1];
+        V[i] = V[i-1] + kappa * dt * (theta - V[i-1]) + eps * sqrt(abs(V[i-1])) * dW2[i-1] + 0.25 * eps * eps * (dW2[i-1]*dW2[i-1] - dt); 
     }
     
     if( X[N-1] > strike_price )
     {
+        //strike_sum = strike_sum + (X[N-1] - strike_price) / pow( 1+rate , T);
         strike_sum = strike_sum + exp(-rate * T) * (X[N-1] - strike_price);
     }
 }
