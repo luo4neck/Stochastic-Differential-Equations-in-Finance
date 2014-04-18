@@ -4,7 +4,7 @@
 #include<gsl/gsl_randist.h>
 #include<cmath>
 #define N 512 
-#define MC 1000 // times of monte carlo tests..
+#define MC 10000 // times of monte carlo tests..
 
 using namespace std;
 
@@ -54,55 +54,39 @@ gsl_rng_set(r, time(NULL));
 const double T=1.0, rate = 0.05, kappa = 1.2, theta = 0.04, eps = 0.3, dt = T/N;
 double dW1[N], dW2[N], X[N], V[N]; 
 
-const double strike_price = 120;
+const double strike_price = 100;
 double strike_sum = 0;
 
-ofstream file("plot.dat");
-for(int j=0; j<MC; ++j)
+for(int j=0; j<MC; ++j) // monte carlo part..
 {
-    bool check = 1;
+    bool check = 0;// check will decide to do correlation or not.. 0 is not do correlation.. 1 is do correlation..
+    
+    if (check == 0) generate_W(r, dW1, dW2, dt);
+    
     while(check)
     {
         generate_W(r, dW1, dW2, dt);
         check = cor_check(dW1, dW2);
     }
     
+    
     V[0] = 0.04, X[0] = 100;
     for(int i=1; i<N; ++i)
     {
-        //X[i] = X[i-1] + rate * X[i-1] * dt + sqrt(V[i-1]) * X[i-1] * dW1[i-1];
         X[i] = X[i-1] + rate * X[i-1] * dt + sqrt(abs(V[i-1])) * X[i-1] * dW1[i-1];
         
-        //V[i] = V[i-1] + kappa * dt * (theta - V[i-1]) + eps * sqrt(V[i-1]) * dW2[i-1];
         V[i] = V[i-1] + kappa * dt * (theta - V[i-1]) + eps * sqrt(abs(V[i-1])) * dW2[i-1];
     }
-    file<<j<<" "<<X[N-1]<<" "<<V[N-1]<<endl;
-
+    
     if( X[N-1] > strike_price )
     {
-        strike_sum = strike_sum + X[N-1];
+        //strike_sum = strike_sum + (X[N-1] - strike_price) / pow( 1+rate , T);
+        strike_sum = strike_sum + exp(-rate * T) * (X[N-1] - strike_price);
     }
 }
-file.close();
 gsl_rng_free(r);
 
-cout<<"This is a Call Option at "<<strike_price<<"$"<<endl<<"Option price is "<<exp(-rate * T) * strike_sum/MC<<endl;
-
-/*=============== plotting part ===============*/
-
-
-FILE *gp = popen("gnuplot -persist", "w");;
-
-if(gp == NULL) 
-{
-    printf("Cannot plot the data!\n");
-    exit(0);
-}
-
-fprintf(gp, "set yrange[-10:150]\n");
-fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l\n");
-fprintf(gp, "pause -1\n");
-fclose(gp);
+cout<<"This is a Call Option at "<<strike_price<<"$"<<endl<<"Option price is "<<strike_sum/MC<<endl;
 
 return 0;
 }
