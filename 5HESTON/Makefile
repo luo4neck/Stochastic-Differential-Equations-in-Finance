@@ -11,4 +11,4 @@ test: euler-heston milstein-heston
 	./euler-heston
 
 clean:
-	rm -f *.o core* 
+	rm -f *.o core* euler-heston milstein-heston

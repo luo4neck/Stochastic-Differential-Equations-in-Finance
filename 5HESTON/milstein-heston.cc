@@ -11,9 +11,7 @@ using namespace std;
 void cor_check(double dw1[N], double dw2[N], double rho) // check if the two processes are correlated..
 {
     for(int i=0; i<N; ++i)
-    {
         dw2[i] = dw1[i] * rho + dw2[i] * sqrt(1 - rho*rho);
-    }
 }
 
 void generate_W(gsl_rng *r, double w1[N], double w2[N], double dt)
@@ -42,9 +40,9 @@ double strike_sum = 0;
 for(int j=0; j<MC; ++j) // monte carlo part..
 {
     
-    generate_W(r, dW1, dW2, dt);
+    generate_W(r, dW1, dW2, dt); // generate two brownian paths..
     
-    cor_check(dW1, dW2, rho);
+    cor_check(dW1, dW2, rho); // correlation of the two brownian paths..
     
     V[0] = 0.04, X[0] = 100;
     for(int i=1; i<N; ++i) // milstein approach for SDE..
@@ -56,7 +54,6 @@ for(int j=0; j<MC; ++j) // monte carlo part..
     
     if( X[N-1] > strike_price )
     {
-        //strike_sum = strike_sum + (X[N-1] - strike_price) / pow( 1+rate , T);
         strike_sum = strike_sum + exp(-rate * T) * (X[N-1] - strike_price);
     }
 }
