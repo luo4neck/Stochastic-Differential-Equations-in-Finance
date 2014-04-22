@@ -8,7 +8,7 @@ euler-heston: euler-heston.cc
 
 test: euler-heston milstein-heston
 	./milstein-heston
-#	./euler-heston
+	./euler-heston
 
 clean:
 	rm -f *.o core* 
