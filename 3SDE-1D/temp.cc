@@ -27,11 +27,13 @@ class Lines
     double *X;
     double err[M];
     double mean;
+    double weak_mean;
 
     Lines(int s): size(s)
     {
         X = new double[s];
         mean = 0;
+        weak_mean = 0;
         for(int i=0; i<s; ++i)
         { X[i] = 0; }
         X[0] = 1;
@@ -40,7 +42,10 @@ class Lines
         { err[i] = 0; }
     }
 
-    ~Lines() { delete[] X;}
+    ~Lines() 
+    {
+        delete[] X;
+    }
 
     double getsigma()
     {
@@ -89,24 +94,24 @@ gsl_rng *r = gsl_rng_alloc( gsl_rng_mt19937 );
 gsl_rng_env_setup();
 gsl_rng_set(r, time(NULL));
 ofstream error("error.dat"); 
-Lines mil3(SIZE), elr3(SIZE), mil2(SIZE/2), elr2(SIZE/2), mil1(SIZE/4), elr1(SIZE/4), mil0(SIZE/8), elr0(SIZE/8), weak3(SIZE), weak2(SIZE/2), weak1(SIZE/4), weak0(SIZE/8);
+Lines mil3(SIZE), elr3(SIZE), mil2(SIZE/2), elr2(SIZE/2), mil1(SIZE/4), elr1(SIZE/4), mil0(SIZE/8), elr0(SIZE/8);
 
 double a=2, b=2, sum=0, dt = 1.0/(double) SIZE, Xtrue[SIZE], W[SIZE], dW[SIZE];
 int I;
 
-Xtrue[0] =1;
-for(int j=0; j<M; ++j) // pathwise loop, M is the time of monte carlo tests..
+elr3.weak_mean = elr2.weak_mean = elr1.weak_mean = elr0.weak_mean = Xtrue[0] =1;
+for(int j=0; j<M; ++j) // M is the time of monte carlo tests..
 {
+//elr3.weak = elr2.weak = elr1.weak = elr0.weak = Xtrue[0] =1;
 
     Prepare(r, dt, a, b, dW, W, Xtrue);    
-    for(int i=1; i<SIZE; ++i) // stepwise approach
+    for(int i=1; i<SIZE; ++i)
     { // step size 1/512..
         mil3.X[i]= mil3.X[i-1] + a*mil3.X[i-1]*dt + b*mil3.X[i-1]*dW[i-1] + 0.5*b*mil3.X[i-1]*b*( dW[i-1]*dW[i-1] - dt);
         mil3.err[j] = mil3.err[j] + abs(Xtrue[i] - mil3.X[i]);
         elr3.X[i]= elr3.X[i-1] + a*elr3.X[i-1]*dt + b*elr3.X[i-1]*dW[i-1];
         elr3.err[j] = elr3.err[j] + abs(Xtrue[i] - elr3.X[i]); 
-        weak3.X[i]= weak3.X[i-1] + a*weak3.X[i-1]*dt + b*weak3.X[i-1]*sign(dW[i-1]) * sqrt(2*dt); 
-        cout<<weak3.X[i]<<endl;
+        elr3.weak_mean = elr3.weak_mean + elr3.X[i];
         
         if(i%2==0)
         {// step size 1/256..
@@ -116,8 +121,7 @@ for(int j=0; j<M; ++j) // pathwise loop, M is the time of monte carlo tests..
             mil2.err[j] = mil2.err[j] + abs(Xtrue[I*2] - mil2.X[I]);
             elr2.X[I]= elr2.X[I-1] + a*elr2.X[I-1]*2*dt + b*elr2.X[I-1]*sum; 
             elr2.err[j] = elr2.err[j] + abs(Xtrue[I*2] - elr2.X[I]);
-            weak2.X[I]= weak2.X[I-1] + a*weak2.X[I-1]*2*dt + b*weak2.X[I-1] * sign(sum) * sqrt(2*dt); 
-            cout<<weak2.X[I]<<endl;
+            elr2.weak_mean = elr2.weak_mean + elr2.X[I-1] + a*elr2.X[I-1]*2*dt + b*elr2.X[I-1] * sign(sum); 
         
             if(i%4==0)
             {// step size 1/128..
@@ -127,8 +131,8 @@ for(int j=0; j<M; ++j) // pathwise loop, M is the time of monte carlo tests..
                 mil1.err[j] = mil1.err[j] + abs(Xtrue[I*4] - mil1.X[I]);
                 elr1.X[I]= elr1.X[I-1] + a*elr1.X[I-1]*4*dt + b*elr1.X[I-1]*sum;
                 elr1.err[j] = elr1.err[j] + abs(Xtrue[I*4] - elr1.X[I]);
-                weak1.X[I]= weak1.X[I-1] + a*weak1.X[I-1]*4*dt + b*weak1.X[I-1]*sign(sum) * sqrt(2*dt); 
-                cout<<weak1.X[I]<<endl;
+                elr1.weak_mean = elr1.weak_mean + elr1.X[I-1] + a*elr1.X[I-1]*2*dt + b*elr1.X[I-1] * sign(sum); 
+         //   elr1.weak_mean = elr1.weak_mean + elr1.X[I];
             
                 if(i%8==0)
                 {// step size 1/64..
@@ -138,12 +142,11 @@ for(int j=0; j<M; ++j) // pathwise loop, M is the time of monte carlo tests..
                     mil0.err[j] = mil0.err[j] + abs(Xtrue[I*8] - mil0.X[I]);
                     elr0.X[I]= elr0.X[I-1] + a*elr0.X[I-1]*8*dt + b*elr0.X[I-1]*sum;
                     elr0.err[j] = elr0.err[j] + abs(Xtrue[I*8] - elr0.X[I]);
-                    weak0.X[I]= weak0.X[I-1] + a*weak0.X[I-1]*8*dt + b*weak0.X[I-1]*sign(sum) * sqrt(2*dt); 
-                    cout<<weak0.X[I]<<endl;
+                    elr0.weak_mean = elr0.weak_mean + elr0.X[I-1] + a*elr0.X[I-1]*2*dt + b*elr0.X[I-1] * sign(sum); 
+        //        elr0.weak_mean = elr0.weak_mean + elr0.X[I];
                 }
             }
         }
-    cout<<endl<<endl;
     }
 mil3.err[j] = mil3.err[j]/(double)mil3.size;
 mil2.err[j] = mil2.err[j]/(double)mil2.size;
@@ -163,16 +166,8 @@ elr2.mean = elr2.mean + elr2.err[j];
 elr1.mean = elr1.mean + elr1.err[j];
 elr0.mean = elr0.mean + elr0.err[j];
 
-weak3.mean = weak3.mean + weak3.X[weak3.size-1];
-weak2.mean = weak2.mean + weak2.X[weak2.size-1];
-weak1.mean = weak1.mean + weak1.X[weak1.size-1];
-weak0.mean = weak0.mean + weak0.X[weak0.size-1];
-
-cout<<weak3.X[SIZE]<<endl;
-
 error<<j<<" "<<mil3.err[j]<<" "<<elr3.err[j]<<" "<<mil2.err[j]<<" "<<elr2.err[j]<<" "<<mil1.err[j]<<" "<<elr1.err[j]<<" "<<mil0.err[j]<<" "<<elr0.err[j]<<endl;// print the error of two methods via gnuplot..
 }// loop over..
-
 gsl_rng_free(r);
 error.close();
 
@@ -186,42 +181,31 @@ elr1.mean = elr1.mean/(double)M;
 elr0.mean = elr0.mean/(double)M;
 
 // weak convergence computing..
-/*
-cout<<weak3.mean<<" "<<exp(a)<<" "<<weak3.mean/(double)weak3.size/(double)M<<endl;// weak convergence..
-cout<<weak2.mean<<" "<<exp(a)<<" "<<weak2.mean/(double)weak2.size/(double)M<<endl;// weak convergence..
-cout<<weak1.mean<<" "<<exp(a)<<" "<<weak1.mean/(double)weak1.size/(double)M<<endl;// weak convergence..
-cout<<weak0.mean<<" "<<exp(a)<<" "<<weak0.mean/(double)weak0.size/(double)M<<endl;// weak convergence..
-*/
+
+ofstream hehe("hehe.dat");// send all data into 'data.dat' for error convergence..
+cout<<elr3.weak_mean<<" "<<exp(a)<<" "<<elr3.weak_mean/(double)elr3.size/(double)M<<endl;// weak convergence..
+cout<<elr2.weak_mean<<" "<<exp(a)<<" "<<elr2.weak_mean/(double)elr2.size/(double)M<<endl;// weak convergence..
+cout<<elr1.weak_mean<<" "<<exp(a)<<" "<<elr1.weak_mean/(double)elr1.size/(double)M<<endl;// weak convergence..
+cout<<elr0.weak_mean<<" "<<exp(a)<<" "<<elr0.weak_mean/(double)elr0.size/(double)M<<endl;// weak convergence..
+
 cout<<endl;
-cout<<weak3.mean<<" "<<exp(a)<<" "<<weak3.mean/(double)M<<endl;// weak convergence..
-cout<<weak2.mean<<" "<<exp(a)<<" "<<weak2.mean/(double)M<<endl;// weak convergence..
-cout<<weak1.mean<<" "<<exp(a)<<" "<<weak1.mean/(double)M<<endl;// weak convergence..
-cout<<weak0.mean<<" "<<exp(a)<<" "<<weak0.mean/(double)M<<endl;// weak convergence..
-
-weak3.mean = abs(weak3.mean/(double)M - exp(a));// weak convergence..
-weak2.mean = abs(weak2.mean/(double)M - exp(a));
-weak1.mean = abs(weak1.mean/(double)M - exp(a));
-weak0.mean = abs(weak0.mean/(double)M - exp(a));
+cout<<elr3.weak_mean<<" "<<exp(a)<<" "<<elr3.weak_mean/(double)M<<endl;// weak convergence..
+cout<<elr2.weak_mean<<" "<<exp(a)<<" "<<elr2.weak_mean/(double)M<<endl;// weak convergence..
+cout<<elr1.weak_mean<<" "<<exp(a)<<" "<<elr1.weak_mean/(double)M<<endl;// weak convergence..
+cout<<elr0.weak_mean<<" "<<exp(a)<<" "<<elr0.weak_mean/(double)M<<endl;// weak convergence..
+elr3.weak_mean = abs(elr3.weak_mean/(double)elr3.size/(double)M - exp(a));// weak convergence..
+elr2.weak_mean = abs(elr2.weak_mean/(double)elr2.size/(double)M - exp(a));
+elr1.weak_mean = abs(elr1.weak_mean/(double)elr1.size/(double)M - exp(a));
+elr0.weak_mean = abs(elr0.weak_mean/(double)elr0.size/(double)M - exp(a));
 cout<<endl;
-
-cout<<weak3.mean<<endl;
-cout<<weak2.mean<<endl;
-cout<<weak1.mean<<endl;
-cout<<weak0.mean<<endl;
-
-//======================weak 
-
-ofstream data("data.dat");// send all data into 'data.dat' for error convergence..
-data<<dt  <<" "<<dt  <<" "<<mil3.mean<<" "<<mil3.up(0.975)<<" "<<mil3.down(0.975)<<" "<<mil3.up(0.95)<<" "<<mil3.down(0.95)<<" "<<elr3.mean<<" "<<elr3.up(0.975)<<" "<<elr3.down(0.975)<<" "<<elr3.up(0.95)<<" "<<elr3.down(0.95)<<" "<<weak3.mean<<endl;
-
-data<<dt*2<<" "<<dt*2<<" "<<mil2.mean<<" "<<mil2.up(0.975)<<" "<<mil2.down(0.975)<<" "<<mil2.up(0.95)<<" "<<mil2.down(0.95)<<" "<<elr2.mean<<" "<<elr2.up(0.975)<<" "<<elr2.down(0.975)<<" "<<elr2.up(0.95)<<" "<<elr2.down(0.95)<<" "<<weak2.mean<<endl;
-
-data<<dt*4<<" "<<dt*4<<" "<<mil1.mean<<" "<<mil1.up(0.975)<<" "<<mil1.down(0.975)<<" "<<mil1.up(0.95)<<" "<<mil1.down(0.95)<<" "<<elr1.mean<<" "<<elr1.up(0.975)<<" "<<elr1.down(0.975)<<" "<<elr1.up(0.95)<<" "<<elr1.down(0.95)<<" "<<weak1.mean<<endl;
-
-data<<dt*8<<" "<<dt*8<<" "<<mil0.mean<<" "<<mil0.up(0.975)<<" "<<mil0.down(0.975)<<" "<<mil0.up(0.95)<<" "<<mil0.down(0.95)<<" "<<elr0.mean<<" "<<elr0.up(0.975)<<" "<<elr0.down(0.975)<<" "<<elr0.up(0.95)<<" "<<elr0.down(0.95)<<" "<<weak0.mean<<endl;
-data.close();
-
-/* ========== data store part ended, error plot part start ========== */
+cout<<elr3.weak_mean<<endl;
+hehe<<1<<" "<<elr3.weak_mean<<endl;
+cout<<elr2.weak_mean<<endl;
+hehe<<2<<" "<<elr2.weak_mean<<endl;
+cout<<elr1.weak_mean<<endl;
+hehe<<3<<" "<<elr1.weak_mean<<endl;
+cout<<elr0.weak_mean<<endl;
+hehe<<4<<" "<<elr0.weak_mean<<endl;
 
 FILE *fp = popen("gnuplot -persist", "w");
 if(fp == NULL)
@@ -229,8 +213,32 @@ if(fp == NULL)
     cout<<"Cannot plot the data!"<<endl;
     exit(0);
 }
+fprintf(fp, "plot 'hehe.dat' u 1:2 w l\n"); 
+fprintf(fp, "pause -1\n");
+hehe.close();
+fclose(fp);
+//======================weak 
+
+ofstream data("data.dat");// send all data into 'data.dat' for error convergence..
+data<<dt<<" "<<dt  <<" "<<mil3.mean<<" "<<mil3.up(0.975)<<" "<<mil3.down(0.975)<<" "<<mil3.up(0.95)<<" "<<mil3.down(0.95)<<" "<<elr3.mean<<" "<<elr3.up(0.975)<<" "<<elr3.down(0.975)<<" "<<elr3.up(0.95)<<" "<<elr3.down(0.95)<<endl;
+
+data<<dt*2<<" "<<dt*2<<" "<<mil2.mean<<" "<<mil2.up(0.975)<<" "<<mil2.down(0.975)<<" "<<mil2.up(0.95)<<" "<<mil2.down(0.95)<<" "<<elr2.mean<<" "<<elr2.up(0.975)<<" "<<elr2.down(0.975)<<" "<<elr2.up(0.95)<<" "<<elr2.down(0.95)<<endl;
+
+data<<dt*4<<" "<<dt*4<<" "<<mil1.mean<<" "<<mil1.up(0.975)<<" "<<mil1.down(0.975)<<" "<<mil1.up(0.95)<<" "<<mil1.down(0.95)<<" "<<elr1.mean<<" "<<elr1.up(0.975)<<" "<<elr1.down(0.975)<<" "<<elr1.up(0.95)<<" "<<elr1.down(0.95)<<endl;
+
+data<<dt*8<<" "<<dt*8<<" "<<mil0.mean<<" "<<mil0.up(0.975)<<" "<<mil0.down(0.975)<<" "<<mil0.up(0.95)<<" "<<mil0.down(0.95)<<" "<<elr0.mean<<" "<<elr0.up(0.975)<<" "<<elr0.down(0.975)<<" "<<elr0.up(0.95)<<" "<<elr0.down(0.95)<<endl;
+data.close();
+
+/* ========== data store part ended, error plot part start ========== */
+
+//FILE *fp = popen("gnuplot -persist", "w");
+fp = popen("gnuplot -persist", "w");
+if(fp == NULL)
+{
+    cout<<"Cannot plot the data!"<<endl;
+    exit(0);
+}
 fprintf(fp, "set title '8 Lines show the error of 4 step sizes and 2 method'\n");
-fprintf(fp, "unset key\n");
 fprintf(fp, "set xlabel 'Number of batches'\n");
 fprintf(fp, "set ylabel 'Errors at different batches'\n");
 fprintf(fp, "plot 'error.dat' u 1:2 w l, 'error.dat' u 1:3 w l, 'error.dat' u 1:4 w l, 'error.dat' u 1:5 w l, 'error.dat' u 1:6 w l, 'error.dat' u 1:7 w l, 'error.dat' u 1:8 w l, 'error.dat' u 1:9 w l\n");
@@ -250,7 +258,7 @@ fprintf(fp, "set logscale xy\n");
 fprintf(fp, "set xlabel 'Step sizes: of 1/512 1/256 1/128 1/64'\n");
 fprintf(fp, "set ylabel 'Errorbars at different step sizes'\n");
 fprintf(fp, "set xrange [0.001:0.05]\n");
-fprintf(fp, "plot 'data.dat' u 1:2 w l title 'standard line', 'data.dat' u 1:3:4:5 w yerrorlines title 'milstein 95 confidence interval', 'data.dat' u 1:3:6:7 w yerrorlines title 'milstein 90 confidence interval', 'data.dat' u 1:8:9:10 w yerrorlines title 'euler 95 confidence interval', 'data.dat' u 1:8:11:12 w yerrorlines title 'euler 90 confidence interval', 'data.dat' u 1:13 w l title 'euler weak convergence'\n");
+fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3:4:5 w yerrorlines, 'data.dat' u 1:3:6:7 w yerrorlines, 'data.dat' u 1:8:9:10 w yerrorlines, 'data.dat' u 1:8:11:12 w yerrorlines\n");
 fprintf(fp, "pause -1\n");
 fclose(fp); 
 
@@ -271,12 +279,9 @@ fprintf(fp, "f1(x)=a1*x**b1\n");//milstein line..
 fprintf(fp, "a1=3;b1=-1\n");
 fprintf(fp, "f2(x)=a2*x**b2\n");//euler line..
 fprintf(fp, "a2=5;b2=-1\n");
-fprintf(fp, "f3(x)=a3*x**b3\n");//euler weak line..
-fprintf(fp, "a3=5;b3=-1\n");
 //fprintf(fp, "fit [0.001:0.05] f1(x) 'data.dat' u 1:3 via a1,b1\n");
 //fprintf(fp, "fit [0.001:0.05] f2(x) 'data.dat' u 1:8 via a2,b2\n");
-//fprintf(fp, "fit [0.001:0.05] f3(x) 'data.dat' u 1:13 via a3,b3\n");
-fprintf(fp, "plot 'data.dat' u 1:2 w l title 'standard line', 'data.dat' u 1:3 w l title 'error of milstein', 'data.dat' u 1:8 w l title 'error of euler strong', 'data.dat' u 1:13 w l title 'error of euler weak', f1(x) lw 1 lc rgb 'orange' title 'fitting of milstein strong', f2(x) lw 1 lc rgb 'yellow' title 'fitting of euler strong', f3(x) lw 1 lc rgb 'grey' title 'fitting of euler weak'\n");
+fprintf(fp, "plot 'data.dat' u 1:2 w l, 'data.dat' u 1:3 w l, 'data.dat' u 1:8 w l, f1(x) lw 1 lc rgb 'orange', f2(x) lw 1 lc rgb 'yellow'\n");
 
 fprintf(fp, "pause -1\n");
 fclose(fp); 
