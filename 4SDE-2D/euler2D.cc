@@ -27,7 +27,7 @@ int main()
 
     const double T=1.0, dt = T/N;
     double dW[N], Xeu[N][2], Xan[N][2], Wt=0;
-    double ABW[2][2];// ABW will be used in analytical solution..
+    double rho_p, rho_n; // positive rho and negative rho..
 
     ofstream plot("plot.dat");
     generate_W(r, dW, dt); // generate two brownian motion paths..
@@ -49,18 +49,11 @@ int main()
         //analytic solution..
         Wt = Wt + dW[i];
         
-        ABW[0][0] = AB[0][0]*dt*(double)i + B[0][0] * Wt; 
-        ABW[0][1] = AB[0][1]*dt*(double)i + B[0][1] * Wt; 
-        ABW[1][0] = AB[1][0]*dt*(double)i + B[1][0] * Wt; 
-        ABW[1][1] = AB[1][1]*dt*(double)i + B[1][1] * Wt; 
+        rho_p = exp (-0.5 * (double)i * dt + Wt );
+        rho_n = exp (-2.5 * (double)i * dt + Wt );
         
-        ABW[1][1] = ABW[1][1] - ABW[1][0] * ABW[0][1] / ABW[0][0]; // doing gaussian elimination..
-        ABW[1][0] = 0;
-        ABW[0][1] = 0;
-        //cout<<ABW[0][0]<<" "<<ABW[0][1]<<endl<<ABW[1][0]<<" "<<ABW[1][1]<<endl;
-
-        Xan[i][0] = exp(ABW[0][0]) * Xan[0][0]; 
-        Xan[i][1] = exp(ABW[1][1]) * Xan[0][1]; 
+        Xan[i][0] = 0.5 * ((rho_p + rho_n) * Xan[0][0] + (rho_p - rho_n) * Xan[0][1] );
+        Xan[i][1] = 0.5 * ((rho_p - rho_n) * Xan[0][0] + (rho_p + rho_n) * Xan[0][1] );
         
         plot<<i<<" "<<Xeu[i][0]<<" "<<Xeu[i][1]<<" "<<Xan[i][0]<<" "<<Xan[i][1]<<endl;
     }
@@ -76,7 +69,7 @@ int main()
         exit(0);
     }
     fprintf(fp, "set title '2-Dimension SDE solution from Analycital Method and Euler-Maruyama Method'\n");
-    fprintf(fp, "set logscale y\n"); 
+    //fprintf(fp, "set logscale y\n"); 
     fprintf(fp, "plot 'plot.dat' using 1:2 w l title 'Euler 0', 'plot.dat' using 1:3 w l title 'Euler 1', 'plot.dat' using 1:4 w l title 'Actual 0', 'plot.dat' using 1:5 w l title 'Actual 1'\n"); 
 
     return 0;

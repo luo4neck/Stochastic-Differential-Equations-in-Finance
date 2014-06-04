@@ -8,13 +8,14 @@
 #include<gsl/gsl_cdf.h>
 #include<cmath>
 
+#include "function1.h" 
 #include "class.h" 
 /* class.h
 this header file includes two classes and two functions, 
 class Line_strong and Line_weak are used to simulate strong simulation and weak simulation..
 function double sign() is used to get the negative or positive sign of a double value..
 function void Prepare() is used to prepare the random number and true solution of a function..
-SIZE 512 and M 50000 are defined in class.h ..
+SIZE 512 and M 50000 are defined in class.h and function header files.. 
 */
 
 using namespace std;
