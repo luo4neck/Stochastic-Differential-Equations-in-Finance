@@ -9,9 +9,8 @@ using namespace std;
 
 const double A[2][2] = {{-1, 1}, {1, -1}};
 const double B[2][2] = {{1, 0}, {0, 1}};
-const double AB[2][2] = {{-1.5, 1}, {1, -1.5}};// AB is the A-0.5*B*B part in the analytical solution.. 
 
-void generate_W(gsl_rng *r, double w1[N], double dt)
+void generate_W(gsl_rng *r, double w1[N], double dt)// generate brownian motion path..
 {
     for(int i=0; i<N; ++i)
     {
@@ -30,11 +29,11 @@ int main()
     double rho_p, rho_n; // positive rho and negative rho..
 
     ofstream plot("plot.dat");
-    generate_W(r, dW, dt); // generate two brownian motion paths..
+    generate_W(r, dW, dt); // generate brownian motion path..
     
     Xeu[0][0] = 1, Xeu[0][1] = 2, Xan[0][0] = 1, Xan[0][1] = 2;
     Wt = dW[0];
-    for(int i=1; i<N; ++i)// approach for euler SDE solution..
+    for(int i=1; i<N; ++i)// approaches for SDE solution..
     {
         // euler solution..
         double Xa0 = Xeu[i-1][0]*A[0][0] + Xeu[i-1][1]*A[1][0];
@@ -46,7 +45,7 @@ int main()
         Xeu[i][0] = Xeu[i-1][0] + Xa0 * dt + Xb0 * dW[i-1];
         Xeu[i][1] = Xeu[i-1][1] + Xa1 * dt + Xb1 * dW[i-1];
     
-        //analytic solution..
+        // analytic solution..
         Wt = Wt + dW[i];
         
         rho_p = exp (-0.5 * (double)i * dt + Wt );
