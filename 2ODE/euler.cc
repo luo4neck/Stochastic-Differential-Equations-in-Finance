@@ -6,11 +6,11 @@
 using namespace std;
 
 //X0 is analyst solution and X1, X2, X3 are euler solution
-
 //X0 is red line is count by i, dt=0.001
 //X1 is green line is count by i, dt=0.001
 //X2 is blue line is count by j, dt=0.01
 //X3 is purple line is count by k, dt=0.1
+
 int main()
 {
 int j=1, k=1;
@@ -51,9 +51,10 @@ printf("Cannot plot the data!\n");
 exit(0);
 }
 
-fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l, 'plot.dat' u 1:4 w l, 'plot.dat' u 1:5 w l\n");
+fprintf(gp, "set title 'Analytic solution compare with numerical solution at 3 stepsizes'\n");
+fprintf(gp, "plot 'plot.dat' u 1:2 w l title 'Analytic solution', 'plot.dat' u 1:3 w l title 'Numerical: dt = 0.001', 'plot.dat' u 1:4 w l title 'Numerical: dt = 0.01', 'plot.dat' u 1:5 w l title 'Numerical: dt = 0.1'\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
-system("vim plot.dat");
+//system("vim plot.dat");
 return 0;
 }

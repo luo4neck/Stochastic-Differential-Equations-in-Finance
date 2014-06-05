@@ -38,7 +38,8 @@ printf("Cannot plot the data!\n");
 exit(0);
 }
 
-fprintf(gp, "plot 'plot.dat' u 1:2 w l, 'plot.dat' u 1:3 w l, 'plot.dat' u 1:4 w l, 'plot.dat' u 1:5 w l, 'plot.dat' u 1:6 w l\n");
+fprintf(gp, "set title '5 paths of brownian motion'\n");
+fprintf(gp, "plot 'plot.dat' u 1:2 w l title 'path 1', 'plot.dat' u 1:3 w l title 'path 2', 'plot.dat' u 1:4 w l title 'path 3', 'plot.dat' u 1:5 w l title 'path 4', 'plot.dat' u 1:6 w l title 'path 5'\n");
 fprintf(gp, "pause -1\n");
 fclose(gp);
 //system("make clean");
