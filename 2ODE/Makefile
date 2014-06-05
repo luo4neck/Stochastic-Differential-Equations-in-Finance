@@ -8,4 +8,4 @@ test: euler
 	./euler
 
 clean:
-	rm -f *.o core* 
+	rm -f *.o core* plot.dat euler 

@@ -8,4 +8,4 @@ test: bpath
 	./bpath
 
 clean:
-	rm -f *.o *.dat  
+	rm -f *.o *.dat bpath 

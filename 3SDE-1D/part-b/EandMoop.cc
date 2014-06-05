@@ -9,8 +9,8 @@
 #include<cmath>
 
 //#include "function0.h" 
-#include "function1.h" 
-//#include "function2.h" 
+//#include "function1.h" 
+#include "function2.h" 
 /*
 Change header file number to simulate different question in 3.b part.. 
 Header file function?.h contains euler function, milstein function and analytic solution fucntion of different SDEsin 3.b part.. 
