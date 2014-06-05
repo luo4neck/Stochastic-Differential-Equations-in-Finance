@@ -8,7 +8,17 @@
 #include<gsl/gsl_cdf.h>
 #include<cmath>
 
+//#include "function0.h" 
 #include "function1.h" 
+//#include "function2.h" 
+/*
+Change header file number to simulate different question in 3.b part.. 
+Header file function?.h contains euler function, milstein function and analytic solution fucntion of different SDEsin 3.b part.. 
+function0.h is same as 3.a part..
+function1.h is 3.b.i part.. 
+function2.h is 3.b.ii part.. 
+*/
+
 #include "class.h" 
 /* class.h
 this header file includes two classes and two functions, 
@@ -29,55 +39,62 @@ ofstream error("error.dat");
 Line_strong mil3(SIZE), elr3(SIZE), mil2(SIZE/2), elr2(SIZE/2), mil1(SIZE/4), elr1(SIZE/4), mil0(SIZE/8), elr0(SIZE/8);
 Line_weak weak3(SIZE), weak2(SIZE/2), weak1(SIZE/4), weak0(SIZE/8);
 
-double a=2, b=2, sum=0, dt = 1.0/(double) SIZE, Xtrue[SIZE], W[SIZE], dW[SIZE];
+double sum=0, dt = 1.0/(double) SIZE, Xtrue[SIZE], W[SIZE], dW[SIZE];
 int I;
 
-Xtrue[0] =1;
 for(int j=0; j<M; ++j) // pathwise loop, M is the time of monte carlo tests..
 {
 
-    Prepare(r, dt, a, b, dW, W, Xtrue);    
+    Prepare(r, dt, dW, W, Xtrue);    
     for(int i=1; i<SIZE; ++i) // stepwise approach
     { // step size 1/512..
-        mil3.X[i]= mil3.X[i-1] + a*mil3.X[i-1]*dt + b*mil3.X[i-1]*dW[i-1] + 0.5*b*mil3.X[i-1]*b*( dW[i-1]*dW[i-1] - dt);
+        mil3.X[i] = milstein(mil3.X[i-1], dW[i-1], dt); 
         mil3.err[j] = mil3.err[j] + abs(Xtrue[i] - mil3.X[i]);
-        elr3.X[i]= elr3.X[i-1] + a*elr3.X[i-1]*dt + b*elr3.X[i-1]*dW[i-1];
+        
+        elr3.X[i] = euler(elr3.X[i-1], dW[i-1], dt);
         elr3.err[j] = elr3.err[j] + abs(Xtrue[i] - elr3.X[i]); 
-        //weak3.X[i]= weak3.X[i-1] + a*weak3.X[i-1]*dt + b*weak3.X[i-1]*sign(dW[i-1]) * sqrt(dt); 
+        
         weak3.X[i]= weak3.X[i-1] + a*weak3.X[i-1]*dt + b*weak3.X[i-1] * dW[i-1];
+        //weak3.X[i]= weak3.X[i-1] + a*weak3.X[i-1]*dt + b*weak3.X[i-1]*sign(dW[i-1]) * sqrt(dt); 
         
         if(i%2==0)
         {// step size 1/256..
             I = i/2;
             sum = dW[i-1] + dW[i-2];
-            mil2.X[I]= mil2.X[I-1] + a*mil2.X[I-1]*2*dt + b*mil2.X[I-1]*sum + 0.5*b*mil2.X[I-1]*b*( sum*sum -2*dt);
+            mil2.X[I] = milstein(mil2.X[I-1], sum, dt*2); 
             mil2.err[j] = mil2.err[j] + abs(Xtrue[I*2] - mil2.X[I]);
-            elr2.X[I]= elr2.X[I-1] + a*elr2.X[I-1]*2*dt + b*elr2.X[I-1] * sum; 
+            
+            elr2.X[I] = euler(elr2.X[I-1], sum, 2*dt);
             elr2.err[j] = elr2.err[j] + abs(Xtrue[I*2] - elr2.X[I]);
-            //weak2.X[I]= weak2.X[I-1] + a*weak2.X[I-1]*2*dt + b*weak2.X[I-1] * sign(sum) * sqrt(2*dt); 
+            
             weak2.X[I]= weak2.X[I-1] + a*weak2.X[I-1]*2*dt + b*weak2.X[I-1] * sum; 
+            //weak2.X[I]= weak2.X[I-1] + a*weak2.X[I-1]*2*dt + b*weak2.X[I-1] * sign(sum) * sqrt(2*dt); 
         
             if(i%4==0)
             {// step size 1/128..
                 I = i/4;
                 sum = dW[i-1] + dW[i-2] + dW[i-3] + dW[i-4];
-                mil1.X[I]= mil1.X[I-1] + a*mil1.X[I-1]*4*dt + b*mil1.X[I-1]*sum + 0.5*b*mil1.X[I-1]*b*( sum*sum -4*dt);
+                mil1.X[I] = milstein(mil1.X[I-1], sum, 4*dt); 
                 mil1.err[j] = mil1.err[j] + abs(Xtrue[I*4] - mil1.X[I]);
-                elr1.X[I]= elr1.X[I-1] + a*elr1.X[I-1]*4*dt + b*elr1.X[I-1] * sum;
+                
+                elr1.X[I] = euler(elr1.X[I-1], sum, 4*dt);
                 elr1.err[j] = elr1.err[j] + abs(Xtrue[I*4] - elr1.X[I]);
-                //weak1.X[I]= weak1.X[I-1] + a*weak1.X[I-1]*4*dt + b*weak1.X[I-1]*sign(sum) * sqrt(4*dt); 
+                
                 weak1.X[I]= weak1.X[I-1] + a*weak1.X[I-1]*4*dt + b*weak1.X[I-1] * sum; 
+                //weak1.X[I]= weak1.X[I-1] + a*weak1.X[I-1]*4*dt + b*weak1.X[I-1]*sign(sum) * sqrt(4*dt); 
             
                 if(i%8==0)
                 {// step size 1/64..
                     I = i/8;
                     sum = dW[i-1] + dW[i-2] + dW[i-3] + dW[i-4] + dW[i-5] + dW[i-6] + dW[i-7] + dW[i-8];
-                    mil0.X[I]= mil0.X[I-1] + a*mil0.X[I-1]*8*dt + b*mil0.X[I-1]*sum + 0.5*b*mil0.X[I-1]*b*( sum*sum -8*dt);
+                    mil0.X[I] = milstein(mil0.X[I-1], sum, 8*dt); 
                     mil0.err[j] = mil0.err[j] + abs(Xtrue[I*8] - mil0.X[I]);
-                    elr0.X[I]= elr0.X[I-1] + a*elr0.X[I-1]*8*dt + b*elr0.X[I-1] * sum;
+                    
+                    elr0.X[I] = euler(elr0.X[I-1], sum, 8*dt);
                     elr0.err[j] = elr0.err[j] + abs(Xtrue[I*8] - elr0.X[I]);
-                    //weak0.X[I]= weak0.X[I-1] + a*weak0.X[I-1]*8*dt + b*weak0.X[I-1]*sign(sum) * sqrt(8*dt); 
+                    
                     weak0.X[I]= weak0.X[I-1] + a*weak0.X[I-1]*8*dt + b*weak0.X[I-1] * sum; 
+                    //weak0.X[I]= weak0.X[I-1] + a*weak0.X[I-1]*8*dt + b*weak0.X[I-1]*sign(sum) * sqrt(8*dt); 
                 }
             }
         }
